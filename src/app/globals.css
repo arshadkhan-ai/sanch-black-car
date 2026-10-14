@@ -1,26 +1,62 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-ink: #080a0b;
+  --color-charcoal: #141719;
+  --color-panel: #1c2126;
+  --color-ivory: #f8f6f2;
+  --color-cream: #f3efe8;
+  --color-gold: #d7af6d;
+  --color-gold-deep: #c69a52;
+  --color-gold-ink: #6f5424;
+  --color-muted: #5e6469;
+  --color-line: #e4dfd6;
+  --font-serif: var(--font-cormorant), "Times New Roman", serif;
+  --font-sans: var(--font-inter), "Segoe UI", sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-ivory);
+  color: var(--color-charcoal);
+  font-family: var(--font-sans);
+}
+
+::selection {
+  background: #d7af6d;
+  color: #080a0b;
+}
+
+:focus-visible {
+  outline: 2px solid #d7af6d;
+  outline-offset: 3px;
+}
+
+.gold-rule {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(215, 175, 109, 0.7), transparent);
+}
+
+.quote-bar input[type="date"]::-webkit-calendar-picker-indicator,
+.quote-bar input[type="time"]::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  cursor: pointer;
+}
+
+@keyframes sanch-pop {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sanch-pop {
+  animation: sanch-pop 180ms ease-out;
 }

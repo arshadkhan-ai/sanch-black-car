@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SANCH BLACK CAR
 
-## Getting Started
+Luxury chauffeur transportation website built with Next.js App Router, TypeScript, and Tailwind CSS.
 
-First, run the development server:
+The site is a quote enquiry experience. Sending a form does not reserve a vehicle or take payment.
+
+## Local setup
 
 ```bash
+npm install
+cp .env.example .env.local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `npm run dev` — development server
+- `npm run lint` — ESLint
+- `npm run typecheck` — TypeScript
+- `npm test` — quote validation tests
+- `npm run build` — production build
+- `npm start` — run the production server
 
-## Learn More
+## Email delivery
 
-To learn more about Next.js, take a look at the following resources:
+Quote and contact forms post to `/api/quote` and `/api/contact`. Messages are sent with [Resend](https://resend.com) only when all three variables are set:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `RESEND_API_KEY`
+- `QUOTE_TO_EMAIL` — inbox that should receive enquiries
+- `QUOTE_FROM_EMAIL` — a sender address on a domain verified in Resend
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+If any of them is missing, or Resend rejects the message, the form shows an error and does not send the visitor to the thank-you page.
 
-## Deploy on Vercel
+Optional public details, shown only when set:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `NEXT_PUBLIC_SITE_URL`
+- `NEXT_PUBLIC_PHONE`
+- `NEXT_PUBLIC_EMAIL`
+- `NEXT_PUBLIC_ADDRESS`
+- `NEXT_PUBLIC_HOURS`
+- social URLs in `.env.example`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Production
+
+```bash
+npm run build
+npm start
+```
+
+Set the environment variables on the host (Vercel or a Node LTS server behind a reverse proxy). No Docker setup is included.
+
+## Photographs
+
+Vehicle and editorial images in `public/images` are Unsplash photographs used under the [Unsplash License](https://unsplash.com/license). They illustrate categories. They are not a claim that SANCH BLACK CAR operates those exact vehicles.
+
+Design references live in `refrences/` and are not used as page backgrounds.
