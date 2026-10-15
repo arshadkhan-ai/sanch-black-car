@@ -1,0 +1,110 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
+      NEXT_PUBLIC_PHONE: ${{ vars.NEXT_PUBLIC_PHONE }}
+      NEXT_PUBLIC_BUSINESS_PHONE: ${{ vars.NEXT_PUBLIC_BUSINESS_PHONE }}
+      NEXT_PUBLIC_WHATSAPP_NUMBER: ${{ vars.NEXT_PUBLIC_WHATSAPP_NUMBER }}
+      NEXT_PUBLIC_EMAIL: ${{ vars.NEXT_PUBLIC_EMAIL }}
+      NEXT_PUBLIC_ADDRESS: ${{ vars.NEXT_PUBLIC_ADDRESS }}
+      NEXT_PUBLIC_HOURS: ${{ vars.NEXT_PUBLIC_HOURS }}
+      NEXT_PUBLIC_LEGAL_EFFECTIVE_DATE: ${{ vars.NEXT_PUBLIC_LEGAL_EFFECTIVE_DATE }}
+      NEXT_PUBLIC_INSTAGRAM_URL: ${{ vars.NEXT_PUBLIC_INSTAGRAM_URL }}
+      NEXT_PUBLIC_FACEBOOK_URL: ${{ vars.NEXT_PUBLIC_FACEBOOK_URL }}
+      NEXT_PUBLIC_LINKEDIN_URL: ${{ vars.NEXT_PUBLIC_LINKEDIN_URL }}
+      NEXT_PUBLIC_YOUTUBE_URL: ${{ vars.NEXT_PUBLIC_YOUTUBE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+      - name: Assemble standalone bundle
+        if: github.event_name != 'pull_request'
+        run: |
+          cp -r public .next/standalone/
+          mkdir -p .next/standalone/.next
+          cp -r .next/static .next/standalone/.next/
+          tar -czf release.tgz -C .next/standalone .
+
+      - uses: actions/upload-artifact@v4
+        if: github.event_name != 'pull_request'
+        with:
+          name: release
+          path: release.tgz
+          retention-days: 7
+
+  deploy:
+    needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://sanchblackcarservices.com
+    concurrency:
+      group: production-deploy
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: deploy
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: release
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          echo "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          cat > ~/.ssh/config <<EOF
+          Host prod
+            HostName ${{ secrets.SSH_HOST }}
+            User ${{ secrets.SSH_USER }}
+            IdentityFile ~/.ssh/deploy_key
+            IdentitiesOnly yes
+          EOF
+
+      - name: Upload release
+        env:
+          SHA: ${{ github.sha }}
+        run: |
+          ssh prod "mkdir -p ~/apps/sanchblackcar/releases/$SHA"
+          scp deploy/ecosystem.config.cjs deploy/activate-release.sh deploy/setup-nginx.sh \
+            deploy/nginx-sanchblackcarservices.com.conf prod:apps/sanchblackcar/
+          ssh prod "tar -xzf - -C ~/apps/sanchblackcar/releases/$SHA" < release.tgz
+
+      - name: Activate release
+        run: ssh prod "bash ~/apps/sanchblackcar/activate-release.sh ${{ github.sha }}"
+
+      - name: Public smoke test
+        run: |
+          for i in $(seq 1 10); do
+            if curl -fsS -o /dev/null https://sanchblackcarservices.com/; then exit 0; fi
+            sleep 3
+          done
+          echo "::warning::https://sanchblackcarservices.com did not respond (nginx/TLS may not be set up yet)"

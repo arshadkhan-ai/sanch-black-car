@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Calendar, Clock, MapPin, Plane, Repeat, Users, type LucideIcon } from "lucide-react";
@@ -50,6 +50,8 @@ const barTabIcon: Partial<Record<QuoteMode, LucideIcon>> = {
   hourly: Clock,
 };
 
+const noopSubscribe = () => () => {};
+
 export function QuoteForm({
   id = "quote",
   appearance,
@@ -74,11 +76,8 @@ export function QuoteForm({
   const [dateSet, setDateSet] = useState(false);
   const [timeSet, setTimeSet] = useState(false);
   const [travelDate, setTravelDate] = useState("");
-  const [today, setToday] = useState("");
-
-  useEffect(() => {
-    setToday(localDate());
-  }, []);
+  // Client-local date; empty on the server so hydration matches.
+  const today = useSyncExternalStore(noopSubscribe, localDate, () => "");
   const dark = appearance === "bar";
 
   const form = useForm<QuoteValues>({

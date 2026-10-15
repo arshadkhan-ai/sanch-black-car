@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Server-side deploy scripts, not app code.
+    "deploy/**",
   ]),
 ]);
 
