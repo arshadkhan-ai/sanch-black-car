@@ -167,7 +167,7 @@ export function SiteHeader() {
         <div className="col-start-3 flex shrink-0 items-center justify-end gap-2.5 sm:gap-3">
           <Link
             href="/bookings"
-            className="inline-flex h-10 items-center gap-2 whitespace-nowrap rounded-md bg-gold px-3 text-sm font-medium text-ink hover:bg-gold-deep sm:px-5"
+            className="hidden h-10 items-center gap-2 whitespace-nowrap rounded-md bg-gold px-3 text-sm font-medium text-ink hover:bg-gold-deep sm:px-5 lg:inline-flex"
           >
             Book Now
             <ArrowRight className="hidden size-4 min-[420px]:block" aria-hidden />
